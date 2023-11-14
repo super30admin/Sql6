@@ -1,0 +1,5 @@
+# Write your MySQL query statement below
+select round(min(sqrt(((p1.x - p2.x)*(p1.x - p2.x)) + ((p1.y - p2.y)*(p1.y - p2.y)))),2) as shortest
+from (select x, y, row_number() over (order by x) as rid from Point2D) p1, 
+(select x, y, row_number() over (order by x) as rid from Point2D) p2
+where p1.rid<>p2.rid
