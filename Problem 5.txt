@@ -1,0 +1,8 @@
+with cte as (select customer_id, order_year, Rank()over(Partition by customer_id order by order_year) as r1, Rank()over(Partition by customer_id order by price) as r2
+from (select customer_id, DATE_FORMAT(order_date, '%Y')  as order_year, sum(price) as price
+from Orders
+group by customer_id, DATE_FORMAT(order_date, '%Y'))a)
+
+select customer_id from cte 
+group by customer_id
+having sum(case when r1=r2 then 1 else 0 end) = max(order_year)- min(order_year)+1
