@@ -1,0 +1,7 @@
+#Shortest Distance
+
+SELECT ROUND(SQRT((t1.x-t2.x)*(t1.x-t2.x) + (t1.y-t2.y)*(t1.y-t2.y)), 2) AS shortest
+FROM Point2d AS t1, Point2d AS t2
+WHERE t1.x!=t2.x OR t1.y!=t2.y
+ORDER BY shortest ASC
+LIMIT 1
