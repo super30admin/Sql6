@@ -1,0 +1,8 @@
+
+q22- Game Play Analysis II
+
+select player_id, device_id from activity where (player_id, event_date) in (select player_id, min(event_date) from activity group by player_id)
+
+q23- Game Play Analysis III
+
+select player_id, event_date, sum(games_played) over (partition by player_id order by event_date) as games_played_so_far from activity
