@@ -1,0 +1,150 @@
+day 6:
+
+Problem 1 : Game Play Analysis II 
+
+sol 1:
+
+select player_id, device_id 
+from activity 
+where (player_id, event_date) in (
+    select player_id, min(event_date) from activity group by player_id ) 
+
+
+sol 2:
+
+with cte as(
+    select player_id ,device_id, min(event_date)as first_login 
+   from Activity
+   group by player_id
+)
+ 
+select c.player_id, a.device_id from activity a join cte c 
+where a.event_date = c.first_login and a.player_id = c.player_id
+
+sol 3:
+
+SELECT 
+    distinct player_id, 
+    FIRST_VALUE(device_id) OVER(PARTITION BY player_id ORDER BY event_date) AS device_id 
+FROM 
+    activity;
+
+sol 4:
+
+SELECT 
+    DISTINCT player_id, 
+    LAST_VALUE(device_id) OVER(PARTITION BY player_id ORDER BY event_date DESC RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS device_id 
+FROM 
+    activity;
+
+
+sol 5:
+
+with cte as(
+SELECT player_id, device_id , rank() OVER(PARTITION BY player_id ORDER BY event_date) AS rnk
+FROM activity)
+
+select player_id, device_id from cte where rnk =1
+
+
+
+
+Problem 2 : Game Play Analysis III 
+
+sol 1:
+
+select a1.player_id, a1.event_date,
+(select sum(a2.games_played) from activity a2
+where a1.player_id =a2.player_id and a1.event_date >= a2.event_date) as games_played_so_far
+from activity a1
+
+
+sol 2:
+
+select player_id,event_date, sum(games_played) over (partition by player_id order by event_date) as games_played_so_far from Activity
+order by event_date
+
+
+
+
+
+Problem 3 : Shortest Distance in a Plane 
+
+sol 1:
+
+with cte as(
+    select 
+        p1.x as p1x,
+        p1.y as p1y, 
+        p2.x as p2x,
+        p2.y as p2y, 
+        sqrt(pow(p2.x-p1.x,2) + pow(p2.y-p1.y,2)) as distance
+    from 
+        point2d p1 
+    join 
+        point2d p2 
+    where 
+        (p1.x != p2.x or p1.y!= p2.y)
+)
+
+select round(min(distance),2) as shortest from cte
+
+
+sol 2:
+
+select round(sqrt(min((pow(p2.x-p1.x,2) + pow(p2.y-p1.y,2)))),2) as shortest 
+from point2d p1 join point2d p2 
+where (p1.x != p2.x or p1.y!= p2.y)
+
+
+sol 3:
+
+select round(sqrt(min((pow(p2.x-p1.x,2) + pow(p2.y-p1.y,2)))),2) as shortest 
+from point2d p1 join point2d p2 on 
+(p1.x <= p2.x and p1.y < p2.y)
+or
+(p1.x <= p2.x and p1.y > p2.y)
+or
+(p1.x > p2.x and p1.y = p2.y)
+
+
+
+
+Problem 4 : Combine Two Tables 
+
+sol 1:
+
+select p.firstName , p.lastName, a.city,a.state
+from person p left join address a on p.personId=a.personId
+
+sol 2:
+
+select p.firstName , p.lastName, a.city,a.state
+from address a right join person p on p.personId=a.personId
+
+sol 3:
+
+SELECT p.firstName, p.lastName, a.city, a.state from Person p, Address a
+WHERE p.personId = a.personId
+UNION
+SELECT  p.firstName, p.lastName, null, null from Person p
+WHERE p.personId NOT IN (Select personId from Address);
+
+
+
+
+Problem 5 : Customers with Strictly Increasing Purchases 
+
+
+with cte as(select customer_id, year(order_date) as 'year', sum(price) as 'price'
+    from orders group by customer_id, year order by customer_id,year
+    )
+
+select c1.customer_id from cte c1 left join cte c2 on
+c1.customer_id = c2.customer_id 
+and
+c1.year = c2.year-1
+and
+c2.price > c1.price
+group by 1
+having count(*) - count(c2.customer_id) = 1
