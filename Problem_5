@@ -1,0 +1,20 @@
+# Write your MySQL query statement below
+
+with cte1 as (
+    select customer_id, left(order_date,4) as year, sum(price) as purchase
+    from orders
+    group by 1,2
+),
+cte2 as (
+    select *,
+    lead(year) over (partition by customer_id order by year ) - year as year_diff,
+    lead(purchase) over (partition by customer_id order by year) - purchase as pur_diff
+    from cte1
+)
+
+select distinct customer_id from cte2
+where customer_id not in (
+    select customer_id from cte2
+    where year_diff > 1 or
+    pur_diff <= 0
+)

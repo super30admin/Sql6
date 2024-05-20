@@ -1,0 +1,8 @@
+# Write your MySQL query statement below
+
+select round(sqrt(power(b.x-a.x, 2)+power(b.y-a.y, 2)),2) as shortest
+from Point2D a
+cross join Point2D b
+having shortest != 0
+order by shortest
+limit 1
