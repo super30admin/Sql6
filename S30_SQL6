@@ -1,0 +1,95 @@
+
+# Game Play Analysis II_Solution_Q1
+
+SELECT a.player_id, a.device_id
+FROM activity a
+WHERE a.event_date IN (SELECT MIN(b.event_date)FROM activity b WHERE a.player_id = b.player_id);
+
+# Alternative1
+
+SELECT a.player_id,a.device_id FROM Activity a JOIN
+(SELECT player_id, MIN(event_date) AS event_date
+FROM Activity
+GROUP BY player_id) b ON a.player_id = b.player_id AND a.event_date = b.event_date 
+
+# Alternative2
+
+SELECT DISTINCT player_id, LAST_VALUE(device_id) OVER(PARTITION BY player_id ORDER BY event_date DESC RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS 'device_id' FROM activity;
+
+# Alternative3
+
+SELECT DISTINCT player_id, FIRST_VALUE(device_id) OVER(PARTITION BY player_id ORDER BY event_date ASC RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS 'device_id' FROM activity;
+
+# Alternative4
+
+WITH cte AS (
+    SELECT DISTINCT player_id, device_id FROM Activity)
+
+SELECT player_id, device_id
+FROM cte
+GROUP BY player_id;
+
+# Alternative5
+
+WITH cte AS (
+    SELECT player_id, device_id, MIN(event_date) AS 'event_date' FROM Activity GROUP BY player_id)
+
+SELECT a.player_id, a.device_id
+FROM Activity a
+INNER JOIN cte c ON a.player_id= c.player_id AND a.event_date= c.event_date;
+
+# Alternative6
+
+SELECT a1.player_id, a1.device_id
+FROM Activity a1
+WHERE (a1.player_id, a1.event_date) IN (SELECT a2.player_id, MIN(a2.event_date) FROM Activity a2 GROUP BY a2.player_id);
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Game Play Analysis III_Solution_Q2
+
+SELECT player_id, event_date, SUM(games_played) OVER(PARTITION BY player_id ORDER BY event_date) AS 'games_played_so_far'
+FROM Activity;
+
+# Alternative1
+
+SELECT a1.player_id, a1.event_date, (SELECT SUM(a2.games_played) FROM Activity a2 WHERE a1.player_id = a2.player_id AND a2.event_date <= a1.event_date) AS 'games_played_so_far'
+FROM Activity a1;
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Shortest Distance in a Plane_Solution_Q3
+
+SELECT ROUND(SQRT(MIN(POW(p2.x - p1.x, 2) + POW(p2.y - p1.y, 2))), 2) AS 'shortest' FROM point2D p1 INNER JOIN  point2D p2 ON p1.x != p2.x OR p1.y != p2.y; 
+
+# Alternative1
+
+SELECT ROUND(SQRT(MIN(POW(p2.x - p1.x, 2) + POW(p2.y - p1.y, 2))), 2) AS 'shortest' FROM point2D p1 INNER JOIN point2D p2 ON 
+(p1.x <= p2.x AND p1.y < p2.y) OR
+(p1.x <= p2.x AND p1.y > p2.y) OR
+(p1.x > p2.x AND p1.y = p2.y); 
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Combine Two Tables_Solution_Q4
+
+SELECT firstName, lastName, city, state
+FROM Person p
+LEFT JOIN Address a ON p.personId = a.personId
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Customers with Strictly Increasing Purchases_Solution_Q5
+
+WITH cte AS(
+    SELECT customer_id, YEAR(order_date) AS 'year', SUM(price) AS 'price'
+    FROM orders
+    GROUP BY customer_id, YEAR ORDER BY customer_id, year
+)
+
+SELECT c1.customer_id 
+FROM cte c1 
+LEFT JOIN cte c2 ON c1.customer_id = c2.customer_id AND c1.year+1 = c2.year AND c1.price < c2.price 
+GROUP BY c1.customer_id
+HAVING COUNT(*) - COUNT(c2.customer_id) =1;
