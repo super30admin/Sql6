@@ -1,0 +1,8 @@
+select
+MIN(round(sqrt(pow(p.x-p1.x,2)+pow(p.y-p1.y,2)),2)) as 'shortest' from point2d p join point2d p1 
+on 
+(p.x <=p1.x and p.y<p1.y)
+or 
+(p.x <=p1.y and p.y>p1.y)
+or
+(p.x >p1.x and p.y=p1.y);
