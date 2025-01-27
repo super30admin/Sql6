@@ -1,0 +1,1 @@
+select Player_id, device_id from (select distinct player_id,rank()  over (partition by player_id order by event_date) as rnk , device_id from activity) a where a.rnk = 1;
