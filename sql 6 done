@@ -1,0 +1,48 @@
+Problem 1 : Game Play Analysis II
+select distinct( player_id), FIRST_VALUE(device_id) over(partition by player_id order by event_date) as first_date from activity;
+
+
+ Problem 2 : Game Play Analysis III
+select a1.player_id, a1.device_id, (select sum(a2.games_played) from activity a2 where a1. player_id =a2.player_id
+and a1. event_date >= a2. event_date) as games_played_by_date from Activity a1
+
+
+Problem 4 : Combine Two Tables
+select p.firstName,p.lastName, a.city, a.state
+from Person p left join Address a 
+on p.personId = a.personId
+
+ Problem 3 : Shortest Distance in a Plane
+  SELECT 
+  CAST(ROUND(
+    MIN(
+      SQRT(CAST(POWER(p2.x - p1.x, 2) + POWER(p2.y - p1.y, 2) AS FLOAT))
+    ), 
+    2
+  ) AS DECIMAL(10,2)) AS shortest
+FROM Point2D p1
+INNER JOIN Point2D p2
+  ON (
+    (p1.x <= p2.x AND p1.y < p2.y) OR
+    (p1.x <= p2.x AND p1.y > p2.y) OR
+    (p1.x > p2.x AND p1.y = p2.y)
+  );
+
+
+problem5:  Customers with Strictly Increasing Purchases
+WITH CTE AS (
+  SELECT 
+    customer_id, 
+    YEAR(order_date) AS year, 
+    SUM(price) AS price
+  FROM Orders1
+  GROUP BY customer_id, YEAR(order_date)
+)
+SELECT c1.customer_id 
+FROM CTE c1
+LEFT JOIN CTE c2 
+  ON c1.customer_id = c2.customer_id
+  AND c1.year + 1 = c2.year
+  AND c1.price < c2.price
+GROUP BY c1.customer_id
+HAVING COUNT(*) - COUNT(c2.customer_id) = 1;
